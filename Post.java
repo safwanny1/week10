@@ -10,9 +10,9 @@ import java.util.ArrayList;
  */
 public class Post 
 {
-    protected String username;  // username of the post's author
-    protected long timestamp;
-    protected int likes;
+    private String username;  // username of the post's author
+    private long timestamp;
+    private int likes;
     protected ArrayList<String> comments;
 
     /**
@@ -61,16 +61,20 @@ public class Post
      * 
      * @return The post's creation time, as a system time value.
      */
-    public long getTimeStamp()
+    protected long getTimeStamp()
     {
         return timestamp;
     }
     
-    public String getUsername()
+    protected String getUsername()
     {
         return username;
     }
     
+    protected int getLikes()
+    {
+        return likes;
+    }
     /**
      * Display the details of this post.
      * 
@@ -96,6 +100,30 @@ public class Post
         else {
             System.out.println("   " + comments.size() + " comment(s). Click here to view.");
         }
+    }
+    
+    protected int printLikes()
+    {
+        if(likes > 0) {
+            System.out.println("  -  " + likes + " people like this.");
+        }
+        else {
+            System.out.println();
+        }
+        
+        return likes;
+    }
+    
+    protected ArrayList<String> printComments()
+    {
+        if(comments.isEmpty()) {
+            System.out.println("   No comments.");
+        }
+        else {
+            System.out.println("   " + comments.size() + " comment(s). Click here to view.");
+        }
+        
+        return comments;
     }
     
     /**

@@ -1,98 +1,114 @@
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
-import java.util.List;
+import org.junit.jupiter.api.*;
+import java.io.*;
+import java.util.ArrayList;
 
-/**
- * Test class for NewsFeed.
- * 
- * @author Safwan C
- * @version 2025.17.4
- */
 public class NewsFeedTest 
 {
-    private NewsFeed feed;
+
     private MessagePost messagePost;
     private PhotoPost photoPost;
+    private NewsFeed newsFeed;
+    private final PrintStream originalOut = System.out;
+    private ByteArrayOutputStream outContent;
 
-    /**
-     * Set up a new NewsFeed and some posts before each test.
-     */
     @BeforeEach
     public void setUp() 
     {
-        feed = new NewsFeed();
-        messagePost = new MessagePost("alice", "Hello world!");
-        photoPost = new PhotoPost("bob", "vacation.jpg", "On the beach");
+        messagePost = new MessagePost("alice", "Hello, world!");
+        photoPost = new PhotoPost("bob", "image.jpg", "Nice view");
+        newsFeed = new NewsFeed();
+        outContent = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(outContent));
     }
 
-    /**
-     * Test adding a message post to the feed.
-     */
-    @Test
-    public void testAddMessagePost() 
+    @AfterEach
+    public void tearDown() 
     {
-        feed.addPost(messagePost);
-        // Not directly accessible, but we can check post content
+        System.setOut(originalOut);
+    }
+
+    @Test
+    public void testMessagePostAttributes() 
+    {
         assertEquals("alice", messagePost.getUsername());
-        assertEquals("Hello world!", messagePost.getText());
+        assertEquals("Hello, world!", messagePost.getText());
+
+        messagePost.like();
+        assertEquals(1, messagePost.getLikes());
+
+        messagePost.addComment("Cool post!");
+        ArrayList<String> comments = messagePost.printComments();
+        assertEquals(1, comments.size());
+        assertTrue(comments.contains("Cool post!"));
     }
 
-    /**
-     * Test adding a photo post to the feed.
-     */
     @Test
-    public void testAddPhotoPost() 
+    public void testPhotoPostAttributes() 
     {
-        feed.addPost(photoPost);
         assertEquals("bob", photoPost.getUsername());
-        assertEquals("vacation.jpg", photoPost.getImageFile());
-        assertEquals("On the beach", photoPost.getCaption());
+        assertEquals("image.jpg", photoPost.getImageFile());
+        assertEquals("Nice view", photoPost.getCaption());
+
+        photoPost.like();
+        assertEquals(1, photoPost.getLikes());
+
+        photoPost.unlike();
+        assertEquals(0, photoPost.getLikes());
     }
 
-    /**
-     * Test showing the feed with both types of posts.
-     */
     @Test
-    public void testLikeAndUnlike() 
+    public void testMessagePostDisplayOutput() 
+    {
+        messagePost.display();
+        String output = outContent.toString();
+        assertTrue(output.contains("alice"));
+        assertTrue(output.contains("Hello, world!"));
+        assertTrue(output.contains("seconds ago") || output.contains("minutes ago"));
+    }
+
+    @Test
+    public void testPhotoPostDisplayOutput() 
+    {
+        photoPost.display();
+        String output = outContent.toString();
+        assertTrue(output.contains("bob"));
+        assertTrue(output.contains("image.jpg"));
+        assertTrue(output.contains("Nice view"));
+    }
+
+    @Test
+    public void testNewsFeedFunctionality() 
+    {
+        newsFeed.addPost(messagePost);
+        newsFeed.addPost(photoPost);
+
+        newsFeed.show();
+        String output = outContent.toString();
+
+        assertTrue(output.contains("Hello, world!"));
+        assertTrue(output.contains("Nice view"));
+        assertTrue(output.contains("image.jpg"));
+    }
+
+    @Test
+    public void testMultipleLikesAndUnlikes() 
     {
         messagePost.like();
         messagePost.like();
         messagePost.unlike();
-        assertEquals(1, messagePost.likes); // uses protected access
-    }
+        assertEquals(1, messagePost.getLikes());
 
-    /**
-     * Test adding a comment to a message post.
-     */
-    @Test
-    public void testAddComment() 
-    {
-        messagePost.addComment("Nice post!");
-        assertFalse(messagePost.comments.isEmpty());
-        assertEquals("Nice post!", messagePost.comments.get(0));
-    }
-
-    /**
-     * Test adding a comment to a photo post.
-     */
-    @Test
-    public void testDisplayDoesNotThrow() 
-    {
-        // Ensure no exceptions during display output
-        assertDoesNotThrow(() -> 
-        {
-            feed.addPost(messagePost);
-            feed.addPost(photoPost);
-            feed.show();
-        });
+        photoPost.unlike(); // Should remain 0
+        assertEquals(0, photoPost.getLikes());
     }
 
     @Test
-    public void test1()
+    public void testAddMultipleComments() 
     {
-        photoPost.display();
-        feed.show();
+        photoPost.addComment("Looks great!");
+        photoPost.addComment("Where was this?");
+        ArrayList<String> comments = photoPost.printComments();
+        assertEquals(2, comments.size());
     }
 }
-
